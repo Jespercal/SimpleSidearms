@@ -34,6 +34,51 @@ namespace PeteTimesSix.SimpleSidearms.Intercepts
     {
         public static bool inToilMaker = false;
 
+        public static Dictionary<string, List<StatDef>> StatsForWorkTypes { get; set; } = new Dictionary<string, List<StatDef>>()
+        {
+            {
+                "Cleaning",
+                new List<StatDef>()
+                {
+                    StatDefOf.CleaningSpeed
+                }
+            }
+        };
+
+        public static Dictionary<string, List<StatDef>> StatsForJobs { get; set; } = new Dictionary<string, List<StatDef>>()
+        {
+            {
+                "ClearPollution",
+                new List<StatDef>()
+                {
+                    StatDefOf.GeneralLaborSpeed,
+                    StatDefOf.WorkSpeedGlobal
+                }
+            },
+            {
+                "ClearSnow",
+                new List<StatDef>()
+                {
+                    StatDefOf.GeneralLaborSpeed,
+                    StatDefOf.WorkSpeedGlobal
+                }
+            },
+            {
+                "CleanFilth",
+                new List<StatDef>()
+                {
+                    StatDefOf.CleaningSpeed
+                }
+            },
+            {
+                "OperateDeepDrill",
+                new List<StatDef>()
+                {
+                    StatDefOf.DeepDrillingSpeed
+                }
+            },
+        };
+
         [HarmonyPrefix]
         public static void Prefix(Toil __result)
         {
@@ -74,6 +119,18 @@ namespace PeteTimesSix.SimpleSidearms.Intercepts
                     SkillDef activeSkill = toil.activeSkill?.Invoke() ?? pawn.CurJob?.RecipeDef?.workSkill;
                     if (activeSkill != null && SkillStatMap.Map.ContainsKey(activeSkill))
                         possiblyActiveStats.AddRange(SkillStatMap.Map[activeSkill]);
+
+                    string jobName = pawn.CurJobDef.defName;
+                    if(possiblyActiveStats.Count == 0 && StatsForJobs.ContainsKey(jobName))
+                    {
+                        possiblyActiveStats.AddRange(StatsForJobs[jobName]);
+                    }
+
+                    string workTypeName = pawn.CurJob?.workGiverDef?.workType?.defName ?? "";
+                    if (possiblyActiveStats.Count == 0 && StatsForWorkTypes.ContainsKey(workTypeName))
+                    {
+                        possiblyActiveStats.AddRange(StatsForWorkTypes[workTypeName]);
+                    }
 
                     //Log.Message($"{toil} has active stats: {string.Join(",", possiblyActiveStats.Select(s => s.LabelCap))}");
 
